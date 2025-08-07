@@ -62,9 +62,6 @@ instance/
 # Redis
 dump.rdb
 
-# Alembic
-alembic.ini
-
 # Local development
 local_settings.py
 
