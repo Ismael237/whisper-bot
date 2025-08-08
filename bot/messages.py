@@ -88,3 +88,12 @@ def get_send_prompt(recipient_label: str) -> str:
         "Your message will be completely anonymous.",
     ]
     return "\n".join(lines)
+
+
+# Notifications
+def get_new_message_notification() -> str:
+    """Notification text sent to recipient when a new message arrives."""
+    return (
+        "📬 You just received a new anonymous message!\n\n"
+        "Open your Inbox to read it."
+    )

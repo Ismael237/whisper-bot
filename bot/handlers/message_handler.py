@@ -8,6 +8,7 @@ from services.session_service import get_active_session, clear_session
 from services.message_service import create_anonymous_message
 from database.models import SessionType
 from utils.logger import logger
+from services.notification_service import notify_new_message
 
 
 SEND_STEP_AWAITING_MESSAGE = "awaiting_message"
@@ -49,6 +50,12 @@ async def handle_incoming_message(update: Update, context: ContextTypes.DEFAULT_
         except ValueError as ve:
             await update.message.reply_text(str(ve))
             return
+
+        # Notify recipient (best effort)
+        try:
+            await notify_new_message(context.bot, recipient_user_id=sess.target_user_id)
+        except Exception:
+            pass
 
         # Clear session after successful send
         try:
