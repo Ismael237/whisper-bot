@@ -15,7 +15,9 @@ def get_welcome_message(username: str) -> str:
 ERROR_MESSAGES = {
     'generic_error': "❌ An error occurred. Please try again.",
     'message_too_long': "❌ Message is too long. Maximum 1000 characters allowed.",
-    'rate_limit': "⏳ Please wait before sending another message."
+    'rate_limit': "⏳ Please wait before sending another message.",
+    'username_validation': "❌ Invalid username. Please use a valid username.",
+    'username_length': "❌ Invalid username. Please use a valid username.",
 }
 
 def get_error_message(error_key: str) -> str:

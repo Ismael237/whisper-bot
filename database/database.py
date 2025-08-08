@@ -4,8 +4,8 @@ import time
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine, Connection
-from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import sessionmaker, scoped_session, Session as SessionType
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
 from config import DATABASE_URL, DEBUG
 from .models import Base
@@ -15,7 +15,7 @@ from utils.helpers import retry
 # Configure SQLAlchemy engine with connection pooling and timeouts
 engine = create_engine(
     DATABASE_URL,
-    echo=DEBUG,
+    echo=False,
 )
 
 # Configure SQLAlchemy session factory
@@ -49,7 +49,7 @@ def init_db() -> None:
         Base.metadata.create_all(bind=engine)
         logger.info("Database tables created successfully")
     except Exception as e:
-        logger.error("Failed to initialize database: %s", str(e))
+        logger.error(f"Failed to initialize database: {str(e)}")
         raise
 
 def get_db() -> Generator[SessionType, None, None]:
@@ -71,7 +71,7 @@ def get_db() -> Generator[SessionType, None, None]:
         yield db
     except Exception as e:
         db.rollback()
-        logger.error("Database error in get_db: %s", str(e), exc_info=True)
+        logger.error(f"Database error in get_db: {str(e)}")
         raise
     finally:
         db.close()
@@ -93,9 +93,13 @@ def get_db_session() -> Generator[SessionType, None, None]:
     try:
         yield db
         db.commit()
+    except SQLAlchemyError as e:
+        db.rollback()
+        logger.error(f"SQLAlchemy error in get_db_session: {str(e)}")
+        raise
     except Exception as e:
         db.rollback()
-        logger.error("Database error in get_db_session: %s", str(e), exc_info=True)
+        logger.error(f"General error in get_db_session: {str(e)}")
         raise
     finally:
         db.close()
@@ -120,7 +124,7 @@ def get_db_connection() -> Connection:
     try:
         return engine.connect()
     except OperationalError as e:
-        logger.error("Failed to establish database connection: %s", str(e))
+        logger.error(f"Failed to establish database connection: {str(e)}")
         raise
 
 def close_db_connection() -> None:
@@ -130,7 +134,7 @@ def close_db_connection() -> None:
         engine.dispose()
         logger.info("Database connections closed successfully")
     except Exception as e:
-        logger.error("Error closing database connections: %s", str(e))
+        logger.error(f"Error closing database connections: {str(e)}")
         raise
 
 def execute_in_transaction(func, *args, **kwargs):

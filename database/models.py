@@ -168,14 +168,14 @@ class User(Base):
     )
     activity_logs = relationship(
         "ActivityLog",
-        back_populates="user",
-        cascade="all, delete-orphan",
+        primaryjoin="User.telegram_id==foreign(ActivityLog.telegram_id)",
+        viewonly=True,
         lazy='dynamic',
         order_by="desc(ActivityLog.created_at)"
     )
     
     __table_args__ = (
-        Index('ix_users_username_lower', func.lower(username), unique=True),
+        Index('ix_users_username_lower', func.lower(username), unique=False),
         {'comment': 'Stores user account information'}
     )
     

@@ -2,6 +2,7 @@ from telegram.ext import Application, CommandHandler
 from bot.handlers import start_handler
 from utils.logger import logger
 from config import TELEGRAM_BOT_TOKEN
+from database.database import init_db
 
 
 def main() -> None:
@@ -17,18 +18,23 @@ def main() -> None:
 
     # Start the Bot
     logger.info("Starting bot...")
+    # Ensure database tables are ready before processing updates
+    try:
+        init_db()
+    except Exception as e:
+        logger.error(f"[Main] Failed to initialize database: {e}")
     application.run_polling()
 
 async def error_handler(update: object, context) -> None:
     """Log the error and send a message to the user."""
-    logger.error("Exception while handling an update:", exc_info=context.error)
+    logger.error(f"Exception while handling an update: {context.error}")
     
     # Send a message to the user
     if update and hasattr(update, 'message') and update.message:
         await update.message.reply_text(
-            "An error occurred while processing your request. Please try again later."
+            f"An error occurred while processing your request. Please try again later."
         )
 
 if __name__ == "__main__":
-    logger.info("[Main] Runn de l'application principale.")
+    logger.info("[Main] Running main application...")
     main()
