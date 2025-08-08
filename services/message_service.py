@@ -108,3 +108,50 @@ def create_anonymous_message(
         return _op(db)
 
 
+def mark_message_as_read(*, message_id: int, session: Optional[OrmSession] = None) -> None:
+    """Mark a message as read by its internal id (idempotent)."""
+
+    def _op(db: OrmSession) -> None:
+        msg = db.query(AnonymousMessage).filter(AnonymousMessage.id == message_id).first()
+        if not msg:
+            return
+        try:
+            msg.mark_as_read(db)
+        except Exception:
+            # Fallback: direct field update
+            if not msg.is_read:
+                msg.is_read = True
+                from utils.helpers import get_utc_time as _now
+                msg.read_at = msg.read_at or _now()
+                db.add(msg)
+        db.flush()
+
+    if session is not None:
+        return _op(session)
+    with get_db_session() as db:
+        return _op(db)
+
+
+def mark_message_as_read_by_public_id(*, public_id: str, session: Optional[OrmSession] = None) -> None:
+    """Mark a message as read by its public id (idempotent)."""
+
+    def _op(db: OrmSession) -> None:
+        msg = db.query(AnonymousMessage).filter(AnonymousMessage.public_id == public_id).first()
+        if not msg:
+            return
+        try:
+            msg.mark_as_read(db)
+        except Exception:
+            if not msg.is_read:
+                msg.is_read = True
+                from utils.helpers import get_utc_time as _now
+                msg.read_at = msg.read_at or _now()
+                db.add(msg)
+        db.flush()
+
+    if session is not None:
+        return _op(session)
+    with get_db_session() as db:
+        return _op(db)
+
+

@@ -9,6 +9,7 @@ from sqlalchemy import desc, func
 from database.database import get_db_session
 from database.models import User, AnonymousMessage, SessionType
 from services.session_service import create_or_get_session, set_session_data, get_session_data
+from services.message_service import mark_message_as_read
 
 
 INBOX_POSITION_KEY = "inbox_position"
@@ -101,6 +102,12 @@ def get_page_by_index(telegram_id: int, index: int, *, session: Optional[OrmSess
 
         idx = max(0, min(int(index), total - 1))
         msg = _fetch_message_at_index(db, user.id, idx)
+        if msg is not None:
+            try:
+                # Mark-as-read on display (idempotent)
+                mark_message_as_read(message_id=msg.id, session=db)
+            except Exception:
+                pass
         has_prev = idx > 0
         has_next = (idx + 1) < total
         return InboxPage(total_count=total, current_index=idx, has_previous=has_prev, has_next=has_next, message=msg)
