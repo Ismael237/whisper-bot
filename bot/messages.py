@@ -18,6 +18,8 @@ ERROR_MESSAGES = {
     'rate_limit': "⏳ Please wait before sending another message.",
     'username_validation': "❌ Invalid username. Please use a valid username.",
     'username_length': "❌ Invalid username. Please use a valid username.",
+    'invalid_link': "❌ This link is invalid or expired.",
+    'self_send_not_allowed': "❌ You cannot send an anonymous message to yourself.",
 }
 
 def get_error_message(error_key: str) -> str:
@@ -66,3 +68,23 @@ def get_play_ready_message(username: str, link: str) -> str:
         f"Your link: {link}\n\n"
         "Share it so your friends can send you anonymous messages!"
     )
+
+
+# Incoming link (send message) prompt
+def get_send_prompt(recipient_label: str) -> str:
+    """Prompt asking the user to type an anonymous message to the recipient.
+
+    Args:
+        recipient_label: Display label for the recipient (e.g., "@john" or "john")
+    """
+    lines = [
+        "💬 Send anonymous message",
+        "",
+        f"Recipient: {recipient_label}",
+        "",
+        "Type your message below:",
+        "(Max 1000 characters)",
+        "",
+        "Your message will be completely anonymous.",
+    ]
+    return "\n".join(lines)
