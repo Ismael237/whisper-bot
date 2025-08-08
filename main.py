@@ -1,4 +1,5 @@
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from bot.handlers import start_handler
 from bot.handlers import play_handler
 from bot.handlers import inbox_handler
@@ -53,6 +54,18 @@ def main() -> None:
         init_db()
     except Exception as e:
         logger.error(f"[Main] Failed to initialize database: {e}")
+    
+    # Setup schedulers for cleanup and stats
+    try:
+        from jobs.cleanup_job import setup_cleanup_scheduler
+        from jobs.stats_job import setup_stats_scheduler
+        scheduler = AsyncIOScheduler()
+        setup_cleanup_scheduler(scheduler)
+        setup_stats_scheduler(scheduler)
+        scheduler.start()
+        logger.info("Schedulers started")
+    except Exception as sched_ex:
+        logger.warning(f"[Main] Failed to start schedulers: {sched_ex}")
     application.run_polling()
 
 async def error_handler(update: object, context) -> None:
