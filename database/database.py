@@ -7,7 +7,7 @@ from sqlalchemy.engine import Engine, Connection
 from sqlalchemy.orm import sessionmaker, scoped_session, Session as SessionType
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
-from config import DATABASE_URL, DEBUG
+from config import DATABASE_URL, DEBUG, DB_POOL_SIZE, DB_MAX_OVERFLOW, DB_POOL_RECYCLE
 from .models import Base
 from utils.logger import logger, sqlalchemy_logger
 from utils.helpers import retry
@@ -16,6 +16,9 @@ from utils.helpers import retry
 engine = create_engine(
     DATABASE_URL,
     echo=False,
+    pool_size=DB_POOL_SIZE,
+    max_overflow=DB_MAX_OVERFLOW,
+    pool_recycle=DB_POOL_RECYCLE,
 )
 
 # Configure SQLAlchemy session factory

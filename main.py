@@ -6,7 +6,8 @@ from bot.handlers import inbox_handler
 from bot.handlers import stats_handler
 from bot.handlers import delete_handler
 from bot.handlers import message_handler
-from utils.logger import logger
+from utils.logger import logger, setup_logger
+from config import LOG_LEVEL
 from config import TELEGRAM_BOT_TOKEN
 from database.database import init_db
 from bot import keyboards
@@ -46,6 +47,12 @@ def main() -> None:
     
     # Log all errors
     application.add_error_handler(error_handler)
+
+    # Configure logging level
+    try:
+        setup_logger(LOG_LEVEL)
+    except Exception:
+        pass
 
     # Start the Bot
     logger.info("Starting bot...")
