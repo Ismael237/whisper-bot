@@ -381,3 +381,31 @@ def set_session_data(
         pass
     return updated
 
+
+def clear_all_sessions(
+    telegram_id: int,
+    *,
+    session: Optional[OrmSession] = None,
+) -> None:
+    """Clear all active sessions of any type for a user, including Redis keys."""
+
+    def _op(db: OrmSession) -> None:
+        sessions = get_active_sessions(telegram_id, session=db)
+        for s in sessions:
+            try:
+                db.delete(s)
+            except Exception:
+                pass
+        db.flush()
+        # Delete Redis keys for known session types
+        try:
+            r = _get_redis()
+            for st in SessionType:
+                r.delete(_redis_key(telegram_id, st))
+        except Exception as re:
+            logger.warning(f"[SessionService] Redis bulk delete failed: {re}")
+
+    if session is not None:
+        return _op(session)
+    with get_db_session() as db:
+        return _op(db)

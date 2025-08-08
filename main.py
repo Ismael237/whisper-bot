@@ -3,6 +3,7 @@ from bot.handlers import start_handler
 from bot.handlers import play_handler
 from bot.handlers import inbox_handler
 from bot.handlers import stats_handler
+from bot.handlers import delete_handler
 from bot.handlers import message_handler
 from utils.logger import logger
 from config import TELEGRAM_BOT_TOKEN
@@ -24,6 +25,7 @@ def main() -> None:
     application.add_handler(CommandHandler("play", play_handler.handle_play))
     application.add_handler(CommandHandler("inbox", inbox_handler.handle_inbox_command))
     application.add_handler(CommandHandler("stats", stats_handler.handle_stats))
+    application.add_handler(CommandHandler("delete", delete_handler.handle_delete_command))
     
     # Map "🎮 Play" button press to the same handler
     play_btn = rf"^{re.escape(keyboards.BTN_PLAY)}$"
@@ -32,12 +34,14 @@ def main() -> None:
     inbox_btn = rf"^{re.escape(keyboards.BTN_MY_INBOX)}$"
     application.add_handler(MessageHandler(filters.Regex(inbox_btn), inbox_handler.handle_inbox_command))
     # Capture free text: route to message handler first (when in SENDING_MESSAGE),
-    # otherwise fall back to play username input
+    # otherwise fall back to play username input and delete confirmation
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler.handle_incoming_message))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, delete_handler.handle_delete_text))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, play_handler.handle_username_input))
 
     # Inline navigation for Inbox
     application.add_handler(CallbackQueryHandler(inbox_handler.handle_inbox_navigation))
+    application.add_handler(CallbackQueryHandler(delete_handler.handle_delete_callback))
     
     # Log all errors
     application.add_error_handler(error_handler)
