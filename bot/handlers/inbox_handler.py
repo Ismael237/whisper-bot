@@ -12,6 +12,7 @@ from services.inbox_service import (
 from services.session_service import create_or_get_session
 from database.models import SessionType
 from utils.logger import logger
+from services.sharing_service import get_message_share_url, increment_share_count
 
 
 async def handle_inbox_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -30,7 +31,12 @@ async def handle_inbox_command(update: Update, context: ContextTypes.DEFAULT_TYP
             return
 
         text = messages.format_inbox_message(page.current_index, page.total_count, page.message.message_content)
-        nav = keyboards.get_inbox_navigation_keyboard(page.has_previous, page.has_next)
+        share_cb = f"share_msg:{page.message.public_id}"
+        nav = keyboards.get_inbox_keyboard_with_share(
+            has_previous=page.has_previous,
+            has_next=page.has_next,
+            share_callback_data=share_cb,
+        )
         await update.message.reply_text(text, reply_markup=nav)
     except Exception as e:
         logger.error(f"[InboxHandler] Error in handle_inbox_command: {e}")
@@ -65,6 +71,18 @@ async def handle_inbox_navigation(update: Update, context: ContextTypes.DEFAULT_
             await query.answer()
             return
 
+        if data.startswith("share_msg:"):
+            public_id = data.split(":", 1)[1]
+            # Build URL and show a share-only keyboard (native Telegram share prompt)
+            url = get_message_share_url(public_id)
+            try:
+                increment_share_count(public_id)
+            except Exception as ex:
+                logger.warning(f"[InboxHandler] Failed to increment share count: {ex}")
+            await query.answer()
+            await query.edit_message_reply_markup(reply_markup=keyboards.get_share_url_keyboard(url))
+            return
+
         # Move position and render
         move_position(tg_user.id, delta)
         page = get_current_page(tg_user.id)
@@ -75,7 +93,12 @@ async def handle_inbox_navigation(update: Update, context: ContextTypes.DEFAULT_
             return
 
         text = messages.format_inbox_message(page.current_index, page.total_count, page.message.message_content)
-        nav = keyboards.get_inbox_navigation_keyboard(page.has_previous, page.has_next)
+        share_cb = f"share_msg:{page.message.public_id}"
+        nav = keyboards.get_inbox_keyboard_with_share(
+            has_previous=page.has_previous,
+            has_next=page.has_next,
+            share_callback_data=share_cb,
+        )
         await query.answer()
         await query.edit_message_text(text, reply_markup=nav)
     except Exception as e:

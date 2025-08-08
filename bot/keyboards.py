@@ -75,6 +75,35 @@ def get_inbox_navigation_keyboard(has_previous: bool, has_next: bool) -> InlineK
     return InlineKeyboardMarkup(buttons or [[InlineKeyboardButton("🏠 Home", callback_data="inbox_home")]])
 
 
+def get_inbox_keyboard_with_share(
+    *,
+    has_previous: bool,
+    has_next: bool,
+    share_callback_data: str,
+) -> InlineKeyboardMarkup:
+    """Inline keyboard including navigation and a Share button (callback)."""
+    rows = []
+    nav_row = []
+    if has_previous:
+        nav_row.append(InlineKeyboardButton("⬅️ Previous", callback_data="inbox_prev"))
+    if has_next:
+        nav_row.append(InlineKeyboardButton("➡️ Next", callback_data="inbox_next"))
+    if nav_row:
+        rows.append(nav_row)
+
+    share_row = [InlineKeyboardButton("📤 Share", callback_data=share_callback_data)]
+    rows.append(share_row)
+
+    return InlineKeyboardMarkup(rows)
+
+
+def get_share_url_keyboard(share_url: str) -> InlineKeyboardMarkup:
+    """Inline keyboard pointing to Telegram share interface for the given URL."""
+    return InlineKeyboardMarkup(
+        [[InlineKeyboardButton("📤 Share", url=share_url)]]
+    )
+
+
 def get_inbox_navigation_keyboard(*, has_previous: bool, has_next: bool) -> InlineKeyboardMarkup:
     """Create inline keyboard for inbox navigation.
 
