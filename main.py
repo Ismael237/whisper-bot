@@ -1,6 +1,7 @@
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from bot.handlers import start_handler
 from bot.handlers import play_handler
+from bot.handlers import message_handler
 from utils.logger import logger
 from config import TELEGRAM_BOT_TOKEN
 from database.database import init_db
@@ -23,7 +24,9 @@ def main() -> None:
     # Map "🎮 Play" button press to the same handler
     play_btn = rf"^{re.escape(keyboards.BTN_PLAY)}$"
     application.add_handler(MessageHandler(filters.Regex(play_btn), play_handler.handle_play))
-    # Capture free text for Play username input
+    # Capture free text: route to message handler first (when in SENDING_MESSAGE),
+    # otherwise fall back to play username input
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler.handle_incoming_message))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, play_handler.handle_username_input))
     
     # Log all errors
