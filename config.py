@@ -16,7 +16,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 # Application Settings
-DEBUG = os.getenv("DEBUG", False)
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes", "on")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
 
 # Limits
@@ -27,8 +27,8 @@ SESSION_TIMEOUT_HOURS = os.getenv("SESSION_TIMEOUT_HOURS", 1)
 
 # Rate Limiting
 RATE_LIMIT_MESSAGES_PER_HOUR = os.getenv("RATE_LIMIT_MESSAGES_PER_HOUR", 10)
-ENABLE_FLOOD_PROTECTION = os.getenv("ENABLE_FLOOD_PROTECTION", True)
+ENABLE_FLOOD_PROTECTION = os.getenv("ENABLE_FLOOD_PROTECTION", "True").lower() in ("true", "1", "yes", "on")
 
 # Analytics
-ENABLE_ANALYTICS = os.getenv("ENABLE_ANALYTICS", True)
+ENABLE_ANALYTICS = os.getenv("ENABLE_ANALYTICS", "True").lower() in ("true", "1", "yes", "on")
 CLEANUP_OLD_SESSIONS_HOURS = os.getenv("CLEANUP_OLD_SESSIONS_HOURS", 24)
