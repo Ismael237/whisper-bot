@@ -6,6 +6,7 @@ from config import TELEGRAM_BOT_TOKEN
 from database.database import init_db
 from bot import keyboards
 import re
+from bot.middleware import session_middleware
 
 
 def main() -> None:
@@ -14,6 +15,8 @@ def main() -> None:
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
     # Add handlers
+    # Middleware-like pre-processor with high priority group
+    application.add_handler(MessageHandler(filters.ALL, session_middleware), group=-100)
     application.add_handler(CommandHandler("start", start_handler.handle_start))
     application.add_handler(CommandHandler("play", play_handler.handle_play))
     
