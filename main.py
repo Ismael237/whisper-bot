@@ -2,6 +2,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQu
 from bot.handlers import start_handler
 from bot.handlers import play_handler
 from bot.handlers import inbox_handler
+from bot.handlers import stats_handler
 from bot.handlers import message_handler
 from utils.logger import logger
 from config import TELEGRAM_BOT_TOKEN
@@ -22,6 +23,7 @@ def main() -> None:
     application.add_handler(CommandHandler("start", start_handler.handle_start))
     application.add_handler(CommandHandler("play", play_handler.handle_play))
     application.add_handler(CommandHandler("inbox", inbox_handler.handle_inbox_command))
+    application.add_handler(CommandHandler("stats", stats_handler.handle_stats))
     
     # Map "🎮 Play" button press to the same handler
     play_btn = rf"^{re.escape(keyboards.BTN_PLAY)}$"
