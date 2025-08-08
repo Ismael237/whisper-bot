@@ -97,3 +97,22 @@ def get_new_message_notification() -> str:
         "📬 You just received a new anonymous message!\n\n"
         "Open your Inbox to read it."
     )
+
+
+# Inbox messages
+def get_no_messages_message() -> str:
+    """Shown when the inbox is empty."""
+    return "📭 No messages yet! Share your link to receive messages."
+
+
+def format_inbox_message(index: int, total: int, content: str) -> str:
+    """Format the inbox view for a single message.
+
+    Args:
+        index: 0-based index in the list (newest first)
+        total: total messages count
+        content: message body
+    """
+    header = f"📬 INBOX (Message {index + 1} of {total})\n\n"
+    body = f"💬 Anonymous message:\n\n{content}"
+    return header + body

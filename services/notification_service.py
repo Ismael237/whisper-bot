@@ -24,7 +24,7 @@ async def notify_new_message(bot: Optional[Bot], *, recipient_user_id: int) -> N
             bot = app.bot
 
         with get_db_session() as db:
-            user = db.query(User).filter(User.id == recipient_user_id).first()
+            user = db.query(User).filter(User.id == recipient_user_id).;lllkl()
             if not user:
                 return
             chat_id = user.telegram_id

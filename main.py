@@ -1,6 +1,7 @@
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters
 from bot.handlers import start_handler
 from bot.handlers import play_handler
+from bot.handlers import inbox_handler
 from bot.handlers import message_handler
 from utils.logger import logger
 from config import TELEGRAM_BOT_TOKEN
@@ -20,14 +21,21 @@ def main() -> None:
     application.add_handler(MessageHandler(filters.ALL, session_middleware), group=-100)
     application.add_handler(CommandHandler("start", start_handler.handle_start))
     application.add_handler(CommandHandler("play", play_handler.handle_play))
+    application.add_handler(CommandHandler("inbox", inbox_handler.handle_inbox_command))
     
     # Map "🎮 Play" button press to the same handler
     play_btn = rf"^{re.escape(keyboards.BTN_PLAY)}$"
     application.add_handler(MessageHandler(filters.Regex(play_btn), play_handler.handle_play))
+    # Map "📬 My Inbox" button press to inbox handler
+    inbox_btn = rf"^{re.escape(keyboards.BTN_MY_INBOX)}$"
+    application.add_handler(MessageHandler(filters.Regex(inbox_btn), inbox_handler.handle_inbox_command))
     # Capture free text: route to message handler first (when in SENDING_MESSAGE),
     # otherwise fall back to play username input
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler.handle_incoming_message))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, play_handler.handle_username_input))
+
+    # Inline navigation for Inbox
+    application.add_handler(CallbackQueryHandler(inbox_handler.handle_inbox_navigation))
     
     # Log all errors
     application.add_error_handler(error_handler)

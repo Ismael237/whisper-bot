@@ -59,3 +59,35 @@ def get_inline_share_button_for_code(bot_username: str, code: str) -> InlineKeyb
         ]
     ]
     return InlineKeyboardMarkup(keyboard)
+
+
+def get_inbox_navigation_keyboard(has_previous: bool, has_next: bool) -> InlineKeyboardMarkup:
+    """Inline keyboard for inbox navigation controls."""
+    buttons = []
+    row = []
+    if has_previous:
+        row.append(InlineKeyboardButton("⬅️ Previous", callback_data="inbox_prev"))
+    if has_next:
+        row.append(InlineKeyboardButton("➡️ Next", callback_data="inbox_next"))
+    if row:
+        buttons.append(row)
+    # Optional home button could be added later
+    return InlineKeyboardMarkup(buttons or [[InlineKeyboardButton("🏠 Home", callback_data="inbox_home")]])
+
+
+def get_inbox_navigation_keyboard(*, has_previous: bool, has_next: bool) -> InlineKeyboardMarkup:
+    """Create inline keyboard for inbox navigation.
+
+    Buttons: ⬅️ Previous | ➡️ Next | 🏠 Home
+    Missing arrows are omitted when not available.
+    """
+    buttons = []
+    row = []
+    if has_previous:
+        row.append(InlineKeyboardButton("⬅️ Previous", callback_data="inbox_prev"))
+    if has_next:
+        row.append(InlineKeyboardButton("➡️ Next", callback_data="inbox_next"))
+    if row:
+        buttons.append(row)
+    buttons.append([InlineKeyboardButton("🏠 Home", callback_data="inbox_home")])
+    return InlineKeyboardMarkup(buttons)
