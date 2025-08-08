@@ -191,3 +191,80 @@ def clear_session(
         return _op(db)
 
 
+def set_current_step(
+    telegram_id: int,
+    session_type: SessionType,
+    step: Optional[str],
+    *,
+    session: Optional[OrmSession] = None,
+) -> UserSession:
+    """Set the current_step for the active session and mirror to Redis.
+
+    Args:
+        telegram_id: Telegram user id
+        session_type: SessionType of the session to update
+        step: New step string or None
+        session: Optional SQLAlchemy session
+
+    Returns:
+        The updated UserSession
+    """
+
+    def _op(db: OrmSession) -> UserSession:
+        sess = UserSession.get_active_session(db, telegram_id, session_type)
+        if not sess:
+            raise ValueError("Active session not found")
+        sess.current_step = step
+        sess.updated_at = get_utc_time()
+        db.add(sess)
+        db.flush()
+
+        # Mirror to Redis
+        key = _redis_key(telegram_id, session_type)
+        try:
+            r = _get_redis()
+            ttl_hours = float(SESSION_TIMEOUT_HOURS or 1)
+            payload = {
+                "telegram_id": telegram_id,
+                "session_type": session_type.value,
+                "target_user_id": sess.target_user_id,
+                "current_step": sess.current_step,
+                "session_data": sess.session_data or {},
+                "expires_at": sess.expires_at.isoformat(),
+            }
+            r.setex(key, int(ttl_hours * 3600), json.dumps(payload))
+        except Exception as re:
+            logger.warning(f"[SessionService] Redis update failed: {re}")
+        return sess
+
+    if session is not None:
+        return _op(session)
+    with get_db_session() as db:
+        return _op(db)
+
+
+def get_active_session(
+    telegram_id: int,
+    session_type: Optional[SessionType] = None,
+    *,
+    session: Optional[OrmSession] = None,
+) -> Optional[UserSession]:
+    """Convenience accessor for current active session from DB.
+
+    Args:
+        telegram_id: Telegram user id
+        session_type: Optional session type to filter
+        session: Optional SQLAlchemy session
+
+    Returns:
+        The active UserSession or None
+    """
+
+    def _op(db: OrmSession) -> Optional[UserSession]:
+        return UserSession.get_active_session(db, telegram_id, session_type)
+
+    if session is not None:
+        return _op(session)
+    with get_db_session() as db:
+        return _op(db)
+

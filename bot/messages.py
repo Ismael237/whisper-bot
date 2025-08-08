@@ -33,3 +33,36 @@ SUCCESS_MESSAGES = {
 def get_success_message(key: str) -> str:
     """Get success message by key."""
     return SUCCESS_MESSAGES.get(key, "✅ Operation completed successfully!")
+
+
+# Play messages
+def get_play_prompt(tg_username: str | None, current_display_name: str | None) -> str:
+    """Prompt asking the user to choose a display name.
+
+    If a Telegram @username is available, we suggest it.
+    """
+    suggestion = f"Suggested: {tg_username}" if tg_username else ""
+    current = current_display_name or "[Not set]"
+    lines = [
+        "🎮 PLAY MODE",
+        "",
+        "Choose your display name:",
+        "This name will be shown when people send you messages.",
+        "",
+        f"Current name: {current}",
+    ]
+    if suggestion:
+        lines.append(suggestion)
+    lines.append("")
+    lines.append("Enter your new display name:")
+    return "\n".join(lines)
+
+
+def get_play_ready_message(username: str, link: str) -> str:
+    """Message shown when the link is ready and the account is active."""
+    return (
+        "✅ Your profile is ready!\n\n"
+        f"Display name: {username}\n"
+        f"Your link: {link}\n\n"
+        "Share it so your friends can send you anonymous messages!"
+    )

@@ -1,8 +1,11 @@
-from telegram.ext import Application, CommandHandler
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from bot.handlers import start_handler
+from bot.handlers import play_handler
 from utils.logger import logger
 from config import TELEGRAM_BOT_TOKEN
 from database.database import init_db
+from bot import keyboards
+import re
 
 
 def main() -> None:
@@ -12,6 +15,13 @@ def main() -> None:
 
     # Add handlers
     application.add_handler(CommandHandler("start", start_handler.handle_start))
+    application.add_handler(CommandHandler("play", play_handler.handle_play))
+    
+    # Map "🎮 Play" button press to the same handler
+    play_btn = rf"^{re.escape(keyboards.BTN_PLAY)}$"
+    application.add_handler(MessageHandler(filters.Regex(play_btn), play_handler.handle_play))
+    # Capture free text for Play username input
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, play_handler.handle_username_input))
     
     # Log all errors
     application.add_error_handler(error_handler)
