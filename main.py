@@ -5,20 +5,24 @@ from bot.handlers import play_handler
 from bot.handlers import inbox_handler
 from bot.handlers import stats_handler
 from bot.handlers import delete_handler
-from bot.handlers import message_handler
+from bot.handlers import text_router
 from utils.logger import logger, setup_logger
 from config import LOG_LEVEL
 from config import TELEGRAM_BOT_TOKEN
 from database.database import init_db
-from bot import keyboards
-import re
 from bot.middleware import session_middleware
+import asyncio
 
 
 def main() -> None:
     """Start the bot."""
-    # Create the Application
-    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    # Create the Application with a post_init hook so we can start schedulers
+    application = (
+        Application.builder()
+        .token(TELEGRAM_BOT_TOKEN)
+        .post_init(_post_init)
+        .build()
+    )
 
     # Add handlers
     # Middleware-like pre-processor with high priority group
@@ -29,21 +33,13 @@ def main() -> None:
     application.add_handler(CommandHandler("stats", stats_handler.handle_stats))
     application.add_handler(CommandHandler("delete", delete_handler.handle_delete_command))
     
-    # Map "🎮 Play" button press to the same handler
-    play_btn = rf"^{re.escape(keyboards.BTN_PLAY)}$"
-    application.add_handler(MessageHandler(filters.Regex(play_btn), play_handler.handle_play))
-    # Map "📬 My Inbox" button press to inbox handler
-    inbox_btn = rf"^{re.escape(keyboards.BTN_MY_INBOX)}$"
-    application.add_handler(MessageHandler(filters.Regex(inbox_btn), inbox_handler.handle_inbox_command))
-    # Capture free text: route to message handler first (when in SENDING_MESSAGE),
-    # otherwise fall back to play username input and delete confirmation
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler.handle_incoming_message))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, delete_handler.handle_delete_text))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, play_handler.handle_username_input))
+    # Capture all free text (including reply keyboard buttons) via a single router
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_router.route_free_text))
 
-    # Inline navigation for Inbox
-    application.add_handler(CallbackQueryHandler(inbox_handler.handle_inbox_navigation))
-    application.add_handler(CallbackQueryHandler(delete_handler.handle_delete_callback))
+    # Inline navigation for Inbox (1-based index: inbox_1, inbox_2, ...)
+    application.add_handler(CallbackQueryHandler(inbox_handler.handle_inbox_navigation, pattern=r"^inbox_\d+$"))
+    application.add_handler(CallbackQueryHandler(inbox_handler.handle_inbox_navigation, pattern=r"^share_msg:.*$"))
+    application.add_handler(CallbackQueryHandler(delete_handler.handle_delete_callback, pattern=r"^delete_.*$"))
     
     # Log all errors
     application.add_error_handler(error_handler)
@@ -62,17 +58,6 @@ def main() -> None:
     except Exception as e:
         logger.error(f"[Main] Failed to initialize database: {e}")
     
-    # Setup schedulers for cleanup and stats
-    try:
-        from jobs.cleanup_job import setup_cleanup_scheduler
-        from jobs.stats_job import setup_stats_scheduler
-        scheduler = AsyncIOScheduler()
-        setup_cleanup_scheduler(scheduler)
-        setup_stats_scheduler(scheduler)
-        scheduler.start()
-        logger.info("Schedulers started")
-    except Exception as sched_ex:
-        logger.warning(f"[Main] Failed to start schedulers: {sched_ex}")
     application.run_polling()
 
 async def error_handler(update: object, context) -> None:
@@ -84,6 +69,25 @@ async def error_handler(update: object, context) -> None:
         await update.message.reply_text(
             f"An error occurred while processing your request. Please try again later."
         )
+
+async def _post_init(app: Application) -> None:
+    """Async post-init to start background schedulers after the event loop is running."""
+    try:
+        # Defer imports to avoid overhead if not needed and to keep main import fast
+        from jobs.cleanup_job import setup_cleanup_scheduler
+        from jobs.stats_job import setup_stats_scheduler
+
+        # Use the currently running event loop
+        loop = asyncio.get_running_loop()
+        scheduler = AsyncIOScheduler(event_loop=loop)
+        setup_cleanup_scheduler(scheduler)
+        setup_stats_scheduler(scheduler)
+        scheduler.start()
+        # Optionally keep a reference on the app
+        app.bot_data["scheduler"] = scheduler
+        logger.info("Schedulers started")
+    except Exception as sched_ex:
+        logger.warning(f"[Main] Failed to start schedulers: {sched_ex}")
 
 if __name__ == "__main__":
     logger.info("[Main] Running main application...")

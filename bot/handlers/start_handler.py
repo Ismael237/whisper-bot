@@ -44,9 +44,8 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             # Validate shape
             code = validate_start_parameter(start_param)
             if not code:
-                await update.message.reply_text(
+                await update.message.reply_markdown_v2(
                     messages.get_error_message("invalid_link"),
-                    parse_mode='Markdown'
                 )
                 # Fall back to welcome menu
                 create_or_get_session(
@@ -55,7 +54,7 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                     initial_data={"entered_via": "start", "chat_id": chat.id if chat else None},
                 )
                 welcome_message = messages.get_welcome_message(tg_user.first_name or tg_user.full_name)
-                await update.message.reply_text(welcome_message, reply_markup=keyboards.get_main_menu(), parse_mode='Markdown')
+                await update.message.reply_markdown_v2(welcome_message, reply_markup=keyboards.get_main_menu())
                 return
 
             # Resolve target user by unique_code
@@ -63,9 +62,8 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                 target = db.query(User).filter(User.unique_code == code).first()
 
             if not target:
-                await update.message.reply_text(
+                await update.message.reply_markdown_v2(
                     messages.get_error_message("invalid_link"),
-                    parse_mode='Markdown'
                 )
                 # Fall back to welcome
                 create_or_get_session(
@@ -74,14 +72,13 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                     initial_data={"entered_via": "start", "chat_id": chat.id if chat else None},
                 )
                 welcome_message = messages.get_welcome_message(tg_user.first_name or tg_user.full_name)
-                await update.message.reply_text(welcome_message, reply_markup=keyboards.get_main_menu(), parse_mode='Markdown')
+                await update.message.reply_markdown_v2(welcome_message, reply_markup=keyboards.get_main_menu())
                 return
 
             # Block self-send
             if target.telegram_id == tg_user.id:
-                await update.message.reply_text(
+                await update.message.reply_markdown_v2(
                     messages.get_error_message("self_send_not_allowed"),
-                    parse_mode='Markdown'
                 )
                 # Show main menu
                 create_or_get_session(
@@ -89,10 +86,9 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
                     session_type=SessionType.SETUP,
                     initial_data={"entered_via": "start", "chat_id": chat.id if chat else None},
                 )
-                await update.message.reply_text(
+                await update.message.reply_markdown_v2(
                     messages.get_welcome_message(tg_user.first_name or tg_user.full_name),
                     reply_markup=keyboards.get_main_menu(),
-                    parse_mode='Markdown'
                 )
                 return
 
@@ -111,9 +107,8 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
             # Display send prompt (do not capture/store text in 3.1)
             recipient_label = f"@{(target.telegram_username or '').lstrip('@')}" if target.telegram_username else target.username
-            await update.message.reply_text(
+            await update.message.reply_markdown_v2(
                 messages.get_send_prompt(recipient_label),
-                parse_mode='Markdown'
             )
             return
 
@@ -127,16 +122,14 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         # Reply with welcome and main menu
         welcome_message = messages.get_welcome_message(tg_user.first_name or tg_user.full_name)
         reply_markup = keyboards.get_main_menu()
-        await update.message.reply_text(
+        await update.message.reply_markdown_v2(
             welcome_message,
             reply_markup=reply_markup,
-            parse_mode='Markdown'
         )
 
     except Exception as e:
         logger.error(f"[StartHandler] Error in /start: {e}")
         message = messages.get_error_message("generic_error")
-        await update.message.reply_text(
+        await update.message.reply_markdown_v2(
             message,
-            parse_mode='Markdown'
         )

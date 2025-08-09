@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any, TYPE_CHECKING
 from enum import Enum as PyEnum
 import uuid
@@ -12,8 +12,7 @@ from sqlalchemy.orm import relationship, validates, Session as SessionType
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.dialects.postgresql import UUID
 
-from utils.logger import logger
-from utils.helpers import get_utc_time
+from utils.time_utils import get_utc_time
 
 # Type checking imports
 if TYPE_CHECKING:

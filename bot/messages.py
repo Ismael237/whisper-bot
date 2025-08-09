@@ -1,118 +1,138 @@
+from bot.keyboards import BTN_PLAY
+from utils.helpers import escape_markdown_v2 as _esc
+from utils.helpers import get_separator as _sep
 
 # Welcome message
 def get_welcome_message(username: str) -> str:
-    """Generate welcome message for new users."""
-    msg = f"👋 *Welcome, {username} to Anonymous Message Bot!*\n\n"
-    msg += "📨 *How it works:*\n"
-    msg += "1. Share your personal link with friends\n"
-    msg += "2. They can send you anonymous messages\n"
-    msg += "3. Read messages in your private inbox\n\n"
-    msg += "Use the buttons below to get started!"
-    
-    return msg
+    """Generate welcome message for new users (MarkdownV2)."""
+    u = _esc(username)
+    lines = [
+        f"*👋 Welcome, {u}\\!*",
+        _sep(),
+        "📨 *How it works\\:*",
+        "1\\. Share your personal link with friends",
+        "2\\. They can send you anonymous messages",
+        "3\\. Read messages in your private inbox",
+        _sep(),
+        "🚀 Tap a button below to start\\!",
+    ]
+    return "\n".join(lines)
 
-# Error messages
+# Error messages (pre-escaped for MarkdownV2 where needed)
 ERROR_MESSAGES = {
-    'generic_error': "❌ An error occurred. Please try again.",
-    'message_too_long': "❌ Message is too long. Maximum 1000 characters allowed.",
-    'rate_limit': "⏳ Please wait before sending another message.",
-    'username_validation': "❌ Invalid username. Please use a valid username.",
-    'username_length': "❌ Invalid username. Please use a valid username.",
-    'invalid_link': "❌ This link is invalid or expired.",
-    'self_send_not_allowed': "❌ You cannot send an anonymous message to yourself.",
+    'generic_error': "❌ An error occurred\\. Please try again\\.",
+    'message_too_long': "❌ Message is too long\\. Maximum 1000 characters allowed\\.",
+    'rate_limit': "⏳ Please wait before sending another message\\.",
+    'username_validation': "❌ Invalid username\\. Please use a valid username\\.",
+    'username_length': "❌ Invalid username\\. Please use a valid username\\.",
+    'invalid_link': "❌ This link is invalid or expired\\.",
+    'self_send_not_allowed': "❌ You cannot send an anonymous message to yourself\\.",
 }
 
 def get_error_message(error_key: str) -> str:
-    """Get error message by key."""
+    """Get error message by key (MarkdownV2)."""
     return ERROR_MESSAGES.get(error_key, ERROR_MESSAGES['generic_error'])
 
 # Success messages
 SUCCESS_MESSAGES = {
-    'message_sent': "✅ Your anonymous message has been sent!",
-    'settings_updated': "⚙️ Settings updated successfully!"
+    'message_sent': (
+        "✅ Your anonymous message has been sent\\!\n"
+        f"{_sep()}\n"
+        f"If you want to receive anonymous messages yourself, tap the {BTN_PLAY} button\\!"
+    ),
+    'settings_updated': "⚙️ Settings updated successfully\\!"
 }
 
 def get_success_message(key: str) -> str:
-    """Get success message by key."""
-    return SUCCESS_MESSAGES.get(key, "✅ Operation completed successfully!")
-
+    """Get success message by key (MarkdownV2)."""
+    return SUCCESS_MESSAGES.get(key, "✅ Operation completed successfully\\!")
 
 # Play messages
 def get_play_prompt(tg_username: str | None, current_display_name: str | None) -> str:
-    """Prompt asking the user to choose a display name.
+    """Prompt asking the user to choose a display name (MarkdownV2).
 
     If a Telegram @username is available, we suggest it.
     """
-    suggestion = f"Suggested: {tg_username}" if tg_username else ""
-    current = current_display_name or "[Not set]"
+    suggestion = f"💡 Suggested\: {_esc(tg_username)}" if tg_username else ""
+    current = _esc(current_display_name) if current_display_name else "\\[Not set\\]"
     lines = [
-        "🎮 PLAY MODE",
-        "",
-        "Choose your display name:",
-        "This name will be shown when people send you messages.",
-        "",
-        f"Current name: {current}",
+        "*🎮 PLAY MODE*",
+        _sep(),
+        "Choose your display name\\:",
+        "This name will be shown when people send you messages\\.",
+        "\n",
+        f"Current name\\: {current}",
     ]
     if suggestion:
         lines.append(suggestion)
-    lines.append("")
-    lines.append("Enter your new display name:")
+    lines.append(_sep())
+    lines.append("✍️ Enter your new display name below\\:")
     return "\n".join(lines)
 
-
 def get_play_ready_message(username: str, link: str) -> str:
-    """Message shown when the link is ready and the account is active."""
+    """Message shown when the link is ready and the account is active (MarkdownV2)."""
+    u = _esc(username)
+    l = _esc(link)
     return (
-        "✅ Your profile is ready!\n\n"
-        f"Display name: {username}\n"
-        f"Your link: {link}\n\n"
-        "Share it so your friends can send you anonymous messages!"
+        "*✅ Profile ready\\!*\n"
+        f"{_sep()}\n"
+        f"👤 *Name*\\: {u}\n"
+        f"🔗 *Link*\\: {l}\n"
+        f"{_sep()}\n"
+        "📤 Share it so friends can message you anonymously\\!"
     )
-
 
 # Incoming link (send message) prompt
 def get_send_prompt(recipient_label: str) -> str:
-    """Prompt asking the user to type an anonymous message to the recipient.
+    """Prompt asking the user to type an anonymous message to the recipient (MarkdownV2).
 
     Args:
         recipient_label: Display label for the recipient (e.g., "@john" or "john")
     """
+    rl = _esc(recipient_label)
     lines = [
-        "💬 Send anonymous message",
-        "",
-        f"Recipient: {recipient_label}",
-        "",
-        "Type your message below:",
-        "(Max 1000 characters)",
-        "",
-        "Your message will be completely anonymous.",
+        "*💬 Send an anonymous message*",
+        _sep(),
+        f"*Recipient*\\: {rl}",
+        "\n",
+        "✍️ Type your message below \\(max 1000 characters\\)\\:",
+        "🛡️ Your message is 100% anonymous\\.",
     ]
     return "\n".join(lines)
 
-
 # Notifications
 def get_new_message_notification() -> str:
-    """Notification text sent to recipient when a new message arrives."""
+    """Notification text sent to recipient when a new message arrives (MarkdownV2)."""
     return (
-        "📬 You just received a new anonymous message!\n\n"
-        "Open your Inbox to read it."
+        "*📬 New message received\\!*\n"
+        f"{_sep()}\n"
+        "Open your Inbox to read it\\."
     )
-
 
 # Inbox messages
 def get_no_messages_message() -> str:
-    """Shown when the inbox is empty."""
-    return "📭 No messages yet! Share your link to receive messages."
-
+    """Shown when the inbox is empty (MarkdownV2)."""
+    return (
+        "*📭 No messages yet\\!*\n"
+        f"{_sep()}\n"
+        "Share your link to start receiving anonymous messages\\.\n"
+        "💡 Tip\\: Use the Share button in your profile to invite friends\\."
+    )
 
 def format_inbox_message(index: int, total: int, content: str) -> str:
-    """Format the inbox view for a single message.
+    """Format the inbox view for a single message (MarkdownV2).
 
     Args:
         index: 0-based index in the list (newest first)
         total: total messages count
         content: message body
     """
-    header = f"📬 INBOX (Message {index + 1} of {total})\n\n"
-    body = f"💬 Anonymous message:\n\n{content}"
-    return header + body
+    header = (
+        f"*📬 INBOX* \\(Message {_esc(str(index + 1))} of {_esc(str(total))}\\)\n\n"
+        f"{_sep()}\n"
+    )
+    title = "*🕵️ Anonymous message :*"
+    escaped = _esc(content or "")
+    formatted = f"\n{escaped}\n"
+    footer = f"\n{_sep()}"
+    return header + title + formatted + footer

@@ -9,6 +9,8 @@ __all__ = [
     "user_service",
     "session_service",
     "link_service",
+    "message_service",
+    "sharing_service",
 ]
 
 

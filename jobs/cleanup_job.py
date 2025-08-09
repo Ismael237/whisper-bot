@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from datetime import timedelta
-
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
 from database.database import get_db_session
 from database.models import UserSession
 from utils.logger import logger
-from utils.helpers import get_utc_time
+from utils.time_utils import get_utc_time
 from config import CLEANUP_OLD_SESSIONS_HOURS
 
 

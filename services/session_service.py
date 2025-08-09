@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session as OrmSession
 from config import REDIS_URL, SESSION_TIMEOUT_HOURS
 from database.models import UserSession, SessionType
 from database.database import get_db_session
-from utils.helpers import get_utc_time
+from utils.time_utils import get_utc_time
 from utils.logger import logger
 
 

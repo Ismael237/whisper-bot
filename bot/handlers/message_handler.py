@@ -3,7 +3,7 @@ from __future__ import annotations
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from bot import messages
+from bot import keyboards, messages
 from services.session_service import get_active_session, clear_session
 from services.message_service import create_anonymous_message
 from database.models import SessionType
@@ -33,7 +33,7 @@ async def handle_incoming_message(update: Update, context: ContextTypes.DEFAULT_
             return
 
         if not sess.target_user_id:
-            await update.message.reply_text(messages.get_error_message("generic_error"))
+            await update.message.reply_markdown_v2(messages.get_error_message("generic_error"))
             try:
                 clear_session(tg_user.id, SessionType.SENDING_MESSAGE)
             except Exception:
@@ -48,7 +48,7 @@ async def handle_incoming_message(update: Update, context: ContextTypes.DEFAULT_
                 content=text,
             )
         except ValueError as ve:
-            await update.message.reply_text(str(ve))
+            await update.message.reply_markdown_v2(str(ve))
             return
 
         # Notify recipient (best effort)
@@ -64,10 +64,8 @@ async def handle_incoming_message(update: Update, context: ContextTypes.DEFAULT_
             pass
 
         # Confirm to the sender
-        await update.message.reply_text(messages.get_success_message("message_sent"))
+        await update.message.reply_markdown_v2(messages.get_success_message("message_sent"), reply_markup=keyboards.get_main_menu())
 
     except Exception as e:
         logger.error(f"[MessageHandler] Error in handle_incoming_message: {e}")
-        await update.message.reply_text(messages.get_error_message("generic_error"))
-
-
+        await update.message.reply_markdown_v2(messages.get_error_message("generic_error"))
