@@ -65,10 +65,9 @@ async def handle_play(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
                 pass
 
             ready_msg = messages.get_play_ready_message(link_res.user.username, link_res.link)
-            share_kb = keyboards.get_inline_share_button_for_code(context.bot.username or "WhisperBot", link_res.code)
             await update.message.reply_text(
                 ready_msg,
-                reply_markup=share_kb,
+                reply_markup=keyboards.get_main_menu(),
                 disable_web_page_preview=True,
                 parse_mode=ParseMode.MARKDOWN_V2,
             )
@@ -87,7 +86,7 @@ async def handle_play(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             tg_username=(f"@{tg_user.username}" if tg_user.username else None),
             current_display_name=(current_user.username if current_user else None),
         )
-        await update.message.reply_text(prompt, parse_mode=ParseMode.MARKDOWN_V2)
+        await update.message.reply_text(prompt, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=keyboards.get_main_menu())
 
     except Exception as e:
         logger.error(f"[PlayHandler] Error in handle_play: {e}")
@@ -127,7 +126,7 @@ async def handle_username_input(update: Update, context: ContextTypes.DEFAULT_TY
                     tg_username=(f"@{tg_user.username}" if tg_user.username else None),
                     current_display_name=None,
                 )
-                await update.message.reply_text(prompt, parse_mode=ParseMode.MARKDOWN_V2)
+                await update.message.reply_text(prompt, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=keyboards.get_main_menu())
                 return
 
             # Ensure link exists for current name
@@ -146,8 +145,7 @@ async def handle_username_input(update: Update, context: ContextTypes.DEFAULT_TY
             except Exception:
                 pass
             ready_msg = messages.get_play_ready_message(link_res.user.username, link_res.link)
-            share_kb = keyboards.get_inline_share_button_for_code(context.bot.username or "WhisperBot", link_res.code)
-            await update.message.reply_text(ready_msg, reply_markup=share_kb, disable_web_page_preview=True, parse_mode=ParseMode.MARKDOWN_V2)
+            await update.message.reply_text(ready_msg, reply_markup=keyboards.get_main_menu(), disable_web_page_preview=True, parse_mode=ParseMode.MARKDOWN_V2)
             return
 
         # Try generate (or retrieve) link with multi-step username resolution
@@ -182,7 +180,7 @@ async def handle_username_input(update: Update, context: ContextTypes.DEFAULT_TY
         if link_res is None:
             # Could not resolve a valid name; report escaped error
             err_text = escape_markdown_v2(str(last_error) if last_error else "Unknown error")
-            await update.message.reply_text(err_text, parse_mode=ParseMode.MARKDOWN_V2)
+            await update.message.reply_text(err_text, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=keyboards.get_main_menu())
             return
 
         # Activate account
@@ -197,11 +195,10 @@ async def handle_username_input(update: Update, context: ContextTypes.DEFAULT_TY
 
         # Reply with ready message and share button
         ready_msg = messages.get_play_ready_message(link_res.user.username, link_res.link)
-        share_kb = keyboards.get_inline_share_button_for_code(context.bot.username or "WhisperBot", link_res.code)
-        await update.message.reply_text(ready_msg, reply_markup=share_kb, disable_web_page_preview=True, parse_mode=ParseMode.MARKDOWN_V2)
+        await update.message.reply_text(ready_msg, reply_markup=keyboards.get_main_menu(), disable_web_page_preview=True, parse_mode=ParseMode.MARKDOWN_V2)
 
     except Exception as e:
         logger.error(f"[PlayHandler] Error in handle_username_input: {e}")
-        await update.message.reply_text(messages.get_error_message("generic_error"), parse_mode=ParseMode.MARKDOWN_V2)
+        await update.message.reply_text(messages.get_error_message("generic_error"), parse_mode=ParseMode.MARKDOWN_V2, reply_markup=keyboards.get_main_menu())
 
 

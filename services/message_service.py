@@ -157,6 +157,30 @@ def mark_message_as_read_by_public_id(*, public_id: str, session: Optional[OrmSe
         return _op(db)
 
 
+def get_message_by_public_id(public_id: str, *, session: Optional[OrmSession] = None) -> Optional[AnonymousMessage]:
+    """Fetch an anonymous message by its public_id or return None if not found."""
+
+    def _op(db: OrmSession) -> Optional[AnonymousMessage]:
+        return db.query(AnonymousMessage).filter(AnonymousMessage.public_id == public_id).first()
+
+    if session is not None:
+        return _op(session)
+    with get_db_session() as db:
+        return _op(db)
+
+
+def get_message_by_id(message_id: int, *, session: Optional[OrmSession] = None) -> Optional[AnonymousMessage]:
+    """Fetch an anonymous message by its internal id or return None if not found."""
+
+    def _op(db: OrmSession) -> Optional[AnonymousMessage]:
+        return db.query(AnonymousMessage).filter(AnonymousMessage.id == int(message_id)).first()
+
+    if session is not None:
+        return _op(session)
+    with get_db_session() as db:
+        return _op(db)
+
+
 INBOX_POSITION_KEY = "inbox_position"
 
 

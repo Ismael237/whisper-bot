@@ -38,7 +38,7 @@ def main() -> None:
 
     # Inline navigation for Inbox (1-based index: inbox_1, inbox_2, ...)
     application.add_handler(CallbackQueryHandler(inbox_handler.handle_inbox_navigation, pattern=r"^inbox_\d+$"))
-    application.add_handler(CallbackQueryHandler(inbox_handler.handle_inbox_navigation, pattern=r"^share_msg:.*$"))
+    application.add_handler(CallbackQueryHandler(inbox_handler.handle_share_inbox_action, pattern=r"^share_inbox_msg_\d+$"))
     application.add_handler(CallbackQueryHandler(delete_handler.handle_delete_callback, pattern=r"^delete_.*$"))
     
     # Log all errors

@@ -2,20 +2,23 @@ from __future__ import annotations
 
 from telegram import Update
 from telegram.constants import ParseMode
-from telegram.ext import ContextTypes, CallbackQueryHandler
+from telegram.ext import ContextTypes
 from telegram.error import BadRequest
 
 from bot import messages, keyboards
+from services.image_service import create_share_card
+from config import BOT_USERNAME
+import os
+import re
+from services.sharing_service import get_message_share_url, increment_share_count
 from services.message_service import (
     ensure_inbox_session,
     get_current_page,
     set_position,
     get_page_by_index,
+    get_message_by_id,
 )
-from services.session_service import create_or_get_session
-from database.models import SessionType
 from utils.logger import logger
-from services.sharing_service import get_message_share_url, increment_share_count
 
 
 def _build_inbox_view_text(page) -> str:
@@ -26,12 +29,82 @@ def _build_inbox_view_text(page) -> str:
 
 def _build_inbox_keyboard(page):
     """Build navigation keyboard with share action, hiding prev/next at bounds."""
-    share_cb = f"share_msg:{page.message.public_id}" if page.message else "share_msg:"
+    share_cb = f"share_inbox_msg_{page.message.id}" if page.message else "share_inbox_msg_"
     return keyboards.get_inbox_keyboard_with_share(
         current_index=page.current_index,
         total=page.total_count,
         share_callback_data=share_cb,
     )
+
+
+async def handle_share_inbox_action(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle share action for inbox given a message public_id."""
+    logger.debug(f"[InboxHandler] share requested from tg:{update.effective_user.id}")
+    try:
+        if not update.callback_query:
+            return
+        query = update.callback_query
+        data = query.data or ""
+    except Exception:
+        pass
+
+    # Fetch message by its internal id from callback data
+    m_share = re.match(r"^share_inbox_msg_(\d+)$", data)
+    if not m_share:
+        return
+    message_id = int(m_share.group(1))
+    msg = get_message_by_id(message_id)
+    if not msg:
+        try:
+            await query.answer("Message introuvable.", show_alert=True)
+        except Exception:
+            pass
+        return
+
+    # Build share URL
+    public_id = getattr(msg, "public_id", None) or ""
+    url = get_message_share_url(public_id) if public_id else ""
+    try:
+        logger.debug(f"[InboxHandler] share requested public_id='{public_id}', url='{url}'")
+    except Exception:
+        pass
+
+    # Use fetched message content
+    msg_text = msg.message_content or ""
+
+    # Resolve asset paths (fonts only)
+    try:
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        title_font_path = os.path.join(project_root, "assets", "fonts", "Poppins-Bold.ttf")
+        body_font_path = os.path.join(project_root, "assets", "fonts", "Poppins-SemiBold.ttf")
+    except Exception:
+        title_font_path = "assets/fonts/Poppins-Bold.ttf"
+        body_font_path = "assets/fonts/Poppins-SemiBold.ttf"
+
+    # Create and send image card with share URL button
+    try:
+        img_io = create_share_card(
+            message_text=msg_text,
+            bot_username=BOT_USERNAME,
+            title_font_path=title_font_path,
+            body_font_path=body_font_path,
+        )
+        caption = "📢 Share this in your story to reply"
+        await query.message.reply_photo(photo=img_io, caption=caption)
+    except Exception as ex:
+        logger.warning(f"[InboxHandler] Failed to generate/share image: {ex}")
+        # fallback: show URL share button
+        await query.edit_message_reply_markup(reply_markup=keyboards.get_share_url_keyboard(url))
+    # Increment share count (best-effort)
+    try:
+        if public_id:
+            increment_share_count(public_id)
+    except Exception as ex:
+        logger.warning(f"[InboxHandler] Failed to increment share count: {ex}")
+    try:
+        await query.answer()
+    except Exception:
+        pass
 
 
 async def handle_inbox_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -79,26 +152,8 @@ async def handle_inbox_navigation(update: Update, context: ContextTypes.DEFAULT_
             logger.debug(f"[InboxHandler] callback received from tg:{tg_user.id} data='{data}'")
         except Exception:
             pass
-        
-        # Handle share action first
-        if data.startswith("share_msg:"):
-            public_id = data.split(":", 1)[1]
-            # Build URL and show a share-only keyboard (native Telegram share prompt)
-            url = get_message_share_url(public_id)
-            try:
-                logger.debug(f"[InboxHandler] share requested public_id='{public_id}', url='{url}'")
-            except Exception:
-                pass
-            try:
-                increment_share_count(public_id)
-            except Exception as ex:
-                logger.warning(f"[InboxHandler] Failed to increment share count: {ex}")
-            await query.answer()
-            await query.edit_message_reply_markup(reply_markup=keyboards.get_share_url_keyboard(url))
-            return
 
         # Direct index navigation: inbox_{n} where n is 1-based
-        import re
         m = re.match(r"^inbox_(\d+)$", data)
         if not m:
             await query.answer()

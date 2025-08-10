@@ -109,6 +109,7 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             recipient_label = f"@{(target.telegram_username or '').lstrip('@')}" if target.telegram_username else target.username
             await update.message.reply_markdown_v2(
                 messages.get_send_prompt(recipient_label),
+                reply_markup=keyboards.get_main_menu(),
             )
             return
 
@@ -121,10 +122,9 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
         # Reply with welcome and main menu
         welcome_message = messages.get_welcome_message(tg_user.first_name or tg_user.full_name)
-        reply_markup = keyboards.get_main_menu()
         await update.message.reply_markdown_v2(
             welcome_message,
-            reply_markup=reply_markup,
+            reply_markup=keyboards.get_main_menu(),
         )
 
     except Exception as e:
@@ -132,4 +132,5 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         message = messages.get_error_message("generic_error")
         await update.message.reply_markdown_v2(
             message,
+            reply_markup=keyboards.get_main_menu(),
         )

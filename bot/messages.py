@@ -9,12 +9,14 @@ def get_welcome_message(username: str) -> str:
     lines = [
         f"*👋 Welcome, {u}\\!*",
         _sep(),
-        "📨 *How it works\\:*",
-        "1\\. Share your personal link with friends",
-        "2\\. They can send you anonymous messages",
-        "3\\. Read messages in your private inbox",
+        "🕵️ *Receive anonymous messages* — share your personal link and read replies privately\\.",
+        "Here's how it works\\:",
+        "1\\. Share your link with friends",
+        "2\\. They send you anonymous messages",
+        "3\\. Read them in your private inbox",
         _sep(),
-        "🚀 Tap a button below to start\\!",
+        "🛡️ Your identity is never shown to senders\\.",
+        f"▶️ Tap {BTN_PLAY} to set your display name and get your link\\!",
     ]
     return "\n".join(lines)
 
@@ -76,8 +78,9 @@ def get_play_ready_message(username: str, link: str) -> str:
     return (
         "*✅ Profile ready\\!*\n"
         f"{_sep()}\n"
-        f"👤 *Name*\\: {u}\n"
-        f"🔗 *Link*\\: {l}\n"
+        f"👤 *Name*\\: {u}\n\n"
+        f"🔗 *Link\\(click to copy\\)*\\:\n"
+        f"\n`{l}`\n\n"
         f"{_sep()}\n"
         "📤 Share it so friends can message you anonymously\\!"
     )
@@ -94,9 +97,9 @@ def get_send_prompt(recipient_label: str) -> str:
         "*💬 Send an anonymous message*",
         _sep(),
         f"*Recipient*\\: {rl}",
-        "\n",
-        "✍️ Type your message below \\(max 1000 characters\\)\\:",
-        "🛡️ Your message is 100% anonymous\\.",
+        "💡 Be kind and specific for better replies\\.",
+        "🛡️ 100% anonymous — your identity is never shared\\.",
+        "✍️ Write your message below \\(max 100 characters\\)\\:",
     ]
     return "\n".join(lines)
 
@@ -105,7 +108,7 @@ def get_new_message_notification() -> str:
     """Notification text sent to recipient when a new message arrives (MarkdownV2)."""
     return (
         "*📬 New message received\\!*\n"
-        f"{_sep()}\n"
+        "\n"
         "Open your Inbox to read it\\."
     )
 
@@ -116,7 +119,8 @@ def get_no_messages_message() -> str:
         "*📭 No messages yet\\!*\n"
         f"{_sep()}\n"
         "Share your link to start receiving anonymous messages\\.\n"
-        "💡 Tip\\: Use the Share button in your profile to invite friends\\."
+        f"{_sep()}\n"
+        "💡 Tip\\: Click on the link in your profile to copy and share your link with friends\\."
     )
 
 def format_inbox_message(index: int, total: int, content: str) -> str:
@@ -128,11 +132,13 @@ def format_inbox_message(index: int, total: int, content: str) -> str:
         content: message body
     """
     header = (
-        f"*📬 INBOX* \\(Message {_esc(str(index + 1))} of {_esc(str(total))}\\)\n\n"
-        f"{_sep()}\n"
+        f"*📬 INBOX* \\(Message {_esc(str(index + 1))} of {_esc(str(total))}\\)\n"
+        f"{_sep()}\n\n"
     )
-    title = "*🕵️ Anonymous message :*"
+    title = ">> 🕵️ Anonymous message :"
+    title += "\n>> "
     escaped = _esc(content or "")
-    formatted = f"\n{escaped}\n"
+    formatted = f"\n>> *{escaped}*"
+    formatted += "\n>> "
     footer = f"\n{_sep()}"
     return header + title + formatted + footer

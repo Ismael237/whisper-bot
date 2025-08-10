@@ -24,9 +24,7 @@ BTN_CONTACT_SUPPORT = "🆘 Contact support"
 def get_main_menu() -> ReplyKeyboardMarkup:
     """Create the main menu keyboard."""
     keyboard = [
-        [KeyboardButton(BTN_PLAY)],
-        [KeyboardButton(BTN_STATS), KeyboardButton(BTN_MY_INBOX)],
-        [KeyboardButton(BTN_HELP), KeyboardButton(BTN_SETTINGS)],
+        [KeyboardButton(BTN_PLAY), KeyboardButton(BTN_MY_INBOX)]
     ]
     return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
 
@@ -82,8 +80,12 @@ def get_inbox_keyboard_with_share(
     current_index: int,
     total: int,
     share_callback_data: str,
+    share_url: str | None = None,
 ) -> InlineKeyboardMarkup:
-    """Inline keyboard including navigation and a Share button (callback).
+    """Inline keyboard including navigation and share actions.
+
+    - Callback button: generates an image card to share ("📷 Share story").
+    - Optional URL button: opens Telegram share sheet with link ("🔗 Copy link").
 
     Uses 1-based indices in callback data: inbox_1, inbox_2, ...
     """
@@ -103,8 +105,11 @@ def get_inbox_keyboard_with_share(
     if nav_row:
         rows.append(nav_row)
 
-    share_row = [InlineKeyboardButton("📤 Share", callback_data=share_callback_data)]
+    share_row = [InlineKeyboardButton("📷 Share", callback_data=share_callback_data)]
     rows.append(share_row)
+
+    if share_url:
+        rows.append([InlineKeyboardButton("🔗 Copy link", url=share_url)])
 
     return InlineKeyboardMarkup(rows)
 
