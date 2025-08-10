@@ -6,3 +6,6 @@ SQLAlchemy>=2.0.0
 alembic>=1.8.1
 redis>=4.3.4
 apscheduler>=3.9.1
+Pillow>=10.0.0
+pilmoji>=2.0.0
+emoji<=1.7.0

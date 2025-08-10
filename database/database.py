@@ -7,7 +7,7 @@ from sqlalchemy.engine import Engine, Connection
 from sqlalchemy.orm import sessionmaker, scoped_session, Session as SessionType
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
-from config import DATABASE_URL, DEBUG
+from config import DATABASE_URL, DEBUG, DB_POOL_SIZE, DB_MAX_OVERFLOW, DB_POOL_RECYCLE
 from .models import Base
 from utils.logger import logger, sqlalchemy_logger
 from utils.helpers import retry
@@ -16,6 +16,9 @@ from utils.helpers import retry
 engine = create_engine(
     DATABASE_URL,
     echo=False,
+    pool_size=DB_POOL_SIZE,
+    max_overflow=DB_MAX_OVERFLOW,
+    pool_recycle=DB_POOL_RECYCLE,
 )
 
 # Configure SQLAlchemy session factory
@@ -34,14 +37,14 @@ if DEBUG:
     @event.listens_for(Engine, 'before_cursor_execute')
     def before_cursor_execute(conn, cursor, statement, params, context, executemany):
         conn.info.setdefault('query_start_time', []).append(time.time())
-        sqlalchemy_logger.debug("Query: %s", statement)
+        sqlalchemy_logger.debug(f"Query: {statement}")
         if params:
-            sqlalchemy_logger.debug("Parameters: %r", params)
+            sqlalchemy_logger.debug(f"Parameters: {params}")
 
     @event.listens_for(Engine, 'after_cursor_execute')
     def after_cursor_execute(conn, cursor, statement, params, context, executemany):
         total = time.time() - conn.info['query_start_time'].pop(-1)
-        sqlalchemy_logger.debug("Query completed in %fms", (total * 1000))
+        sqlalchemy_logger.debug(f"Query completed in {total * 1000}ms")
 
 def init_db() -> None:
     """Initialize the database by creating all tables."""

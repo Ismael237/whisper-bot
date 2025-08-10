@@ -18,6 +18,7 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 # Application Settings
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes", "on")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
+LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG" if DEBUG else "INFO").upper()
 
 # Limits
 MAX_MESSAGE_LENGTH = os.getenv("MAX_MESSAGE_LENGTH", 1000)
@@ -32,3 +33,8 @@ ENABLE_FLOOD_PROTECTION = os.getenv("ENABLE_FLOOD_PROTECTION", "True").lower() i
 # Analytics
 ENABLE_ANALYTICS = os.getenv("ENABLE_ANALYTICS", "True").lower() in ("true", "1", "yes", "on")
 CLEANUP_OLD_SESSIONS_HOURS = os.getenv("CLEANUP_OLD_SESSIONS_HOURS", 24)
+
+# Database Pooling
+DB_POOL_SIZE = int(os.getenv("DB_POOL_SIZE", 5))
+DB_MAX_OVERFLOW = int(os.getenv("DB_MAX_OVERFLOW", 10))
+DB_POOL_RECYCLE = int(os.getenv("DB_POOL_RECYCLE", 1800))  # seconds
